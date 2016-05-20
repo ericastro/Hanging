@@ -33,7 +33,7 @@ class Engine:
     
     @property
     def still_not_correct(self):
-        return self.word != self.blanks
+        return self.word_letters != self.blanks
     
     @property
     def tries_left(self):
@@ -131,9 +131,9 @@ def main():
         level = choose_level(prompt)
         word = word_to_guess(level)
         game = Engine(word, level.Errors)
-        while game.more_tries or game.still_not_correct:
+        while game.more_tries and game.still_not_correct:
             game.interface
-            guess = game.fill_blanks(prompt)
+            game.fill_blanks(prompt)
         else:
             if not game.more_tries:
                 pass
