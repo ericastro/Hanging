@@ -59,15 +59,6 @@ class Engine:
     def interface_wrong_guesses(self):
         return ', '.join(self.wrong_guesses)
 
-    @property
-    def interface(self):
-        print '\n'
-        print 80 * '#'
-        print 'Wrong guesses: %s' % self.interface_wrong_guesses
-        print 'Guesses: %s' % self.interface_guesses
-        print 'Chances left: %d' % self.tries_left
-        print '\n'
-        print self.interface_blanks
     
     def indexes(self, sequence, element):
         return tuple(index for index, item in enumerate(sequence) if item == element)
@@ -83,62 +74,101 @@ class Engine:
         self.wrong_guesses.append(letter)
         self.tries_left -= 1
         return False
- 
 
-def choose_level(input_func):
-    choice = int(input_func())
-    Level = namedtuple('Level', 'Name Errors')
-    level = {
-            1: Level('easy', 7),
-            2: Level('medium', 10),
-            3: Level('hard', 12)
-            }
-    return level[choice]
 
-def word_to_guess(level):
-    words = ''.join(('en_us_', level.Name, '.txt'))
-    path = os.path.abspath(os.path.dirname(__file__))
-    words_file = os.path.join(path, 'words', words)
-    with open(words_file, 'r') as wf:
-        return random.choice(wf.readlines()).strip('\n')
+class Interface:
+    
+    def __init__(self):
+        self._level = None
+        self._word = None
 
-def prompt():
-    choice = inspect.stack()[1][3]
-    prompts = {
-            'choose_level': 'Choose a level to play (1-Easy, 2-Medium, 3-Hard): ',
-            'fill_blanks': 'Enter a letter: ',
-            'play_again': '\nDo you want to play again (yes or no)? ',
-            }
-    return raw_input(prompts[choice])
+    def __call__(self, wrongs, guesses, tries, blanks):
+        print '\n'
+        print 80 * '#'
+        print 'Wrong guesses: %s' % wrongs
+        print 'Guesses: %s' % guesses
+        print 'Chances left: %d' % tries
+        print '\n'
+        print blanks
 
-def greeting():
-    print """
-    ************************
-    *      HANGINGMAN      *
-    ************************
+    def choose_level(self, input_func):
+        choice = int(input_func())
+        Level = namedtuple('Level', 'Name Errors')
+        level = {
+                1: Level('easy', 7),
+                2: Level('medium', 10),
+                3: Level('hard', 12)
+                }
+        self._level = level[choice]
+        return self._level
 
-    The rules are pretty simple:
+    def word_to_guess(self, level):
+        words = ''.join(('en_us_', self._level.Name, '.txt'))
+        path = os.path.abspath(os.path.dirname(__file__))
+        words_file = os.path.join(path, 'words', words)
+        with open(words_file, 'r') as wf:
+            self._word = random.choice(wf.readlines()).strip('\n')
+            return self._word
 
-    Guess the word or the guy gets hanged. Of course, for now there's no guy,
-    because the creator of this game haven't made the drawings yet. But you
-    get the idea. Use a little imagination, alright?
+    def prompt(self):
+        choice = inspect.stack()[1][3]
+        prompts = {
+                'choose_level': 'Choose a level to play (1-Easy, 2-Medium, 3-Hard): ',
+                'fill_blanks': 'Enter a letter: ',
+                'play_again': '\nDo you want to play again (yes or no)? ',
+                }
+        return raw_input(prompts[choice])
 
-    """
+    def greeting(self):
+        print """
+        ************************
+        *      HANGINGMAN      *
+        ************************
+    
+        The rules are pretty simple:
+    
+        Guess the word or the guy gets hanged. Of course, for now there's no guy,
+        because the creator of this game haven't made the drawings yet. But you
+        get the idea. Use a little imagination, alright?
+    
+        """
+
+    def congratulations(self):
+        print 'Congratulations, you won!'
+        print 'The word is %s.' % self._word.upper()
+
+    def loose(self):
+        print 'Hey, sorry, you lost.'
+        print 'Better luck next time!'
+
+    def play_again(self, input_func):
+        choice = str(input_func())
+        if not choice.startswith('y'): exit(0)
+
+
 
 def main():
-    greeting()
+    interface = Interface()
+    interface.greeting()
     while True:
-        level = choose_level(prompt)
-        word = word_to_guess(level)
+        level = interface.choose_level(interface.prompt)
+        word = interface.word_to_guess(level.Name)
         game = Engine(word, level.Errors)
         while game.more_tries and game.still_not_correct:
-            game.interface
-            game.fill_blanks(prompt)
+            data = (
+                   game.interface_wrong_guesses,
+                   game.interface_guesses,
+                   game.tries_left,
+                   game.interface_blanks,
+               )
+            interface(*data)
+            game.fill_blanks(interface.prompt)
         else:
             if not game.more_tries:
-                pass
+                interface.loose()
             elif not game.still_not_correct:
-                pass
+                interface.congratulations()
+            interface.play_again(interface.prompt)
 
 
 if __name__ == '__main__':
