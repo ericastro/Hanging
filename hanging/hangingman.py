@@ -1,3 +1,22 @@
+#/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Copyright (C) 2016 Alexandre Paloschi Horta - http://alexhorta.com
+#
+#     This program is free software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+# 
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+# 
+#     You should have received a copy of the GNU General Public License
+#     along with this program (see LICENSE for details).
+#     If not, see <http://www.gnu.org/licenses/>.
+
 from collections import namedtuple
 import inspect
 import os
@@ -12,6 +31,9 @@ class Engine:
         """The game logic for the normal mode.
 
         :param word: The word to guess.
+        :param blanks: The blank underscores that are showed to the player.
+        :param guesses: List of the letters tried by the player.
+        :param wrong_guesses: List of the wrong guesses made by the player.
         :param tries: The number of tries available.
         """
         self._word = [letter for letter in word]
@@ -31,11 +53,6 @@ class Engine:
     @property
     def blanks(self):
         return self._blanks
-
-    @property
-    def interface_blanks(self):
-        interface_blanks = ['_' if elem == None else elem for elem in self.blanks]
-        return ' '.join(interface_blanks)
     
     @property
     def still_not_correct(self):
@@ -52,18 +69,10 @@ class Engine:
     @property
     def guesses(self):
         return self._guesses
-
-    @property
-    def interface_guesses(self):
-        return ', '.join(self.guesses)
     
     @property
     def wrong_guesses(self):
         return self._wrong_guesses
-
-    @property
-    def interface_wrong_guesses(self):
-        return ', '.join(self.wrong_guesses)
     
     def indexes(self, sequence, element):
         return tuple(index for index, item in enumerate(sequence) if item == element)
@@ -82,6 +91,7 @@ class Engine:
 
 
 class Interface:
+    '''Define the interface for the text mode version of the game.'''
     
     def __init__(self):
         self._level = None
@@ -90,11 +100,21 @@ class Interface:
     def __call__(self, wrongs, guesses, tries, blanks):
         print '\n'
         print 80 * '#'
-        print 'Wrong guesses: %s' % wrongs
-        print 'Guesses: %s' % guesses
+        print 'Wrong guesses: %s' % self.interface_wrong_guesses(wrongs)
+        print 'Guesses: %s' % self.interface_guesses(guesses)
         print 'Chances left: %d' % tries
         print '\n'
-        print blanks
+        print self.interface_blanks(blanks)
+
+    def interface_guesses(self, guesses):
+        return ', '.join(guesses)
+
+    def interface_wrong_guesses(self, wrongs):
+        return ', '.join(wrongs)
+
+    def interface_blanks(self, blanks):
+        interface_blanks = ['_' if elem == None else elem for elem in blanks]
+        return ' '.join(interface_blanks)
 
     @property
     def level(self):
@@ -171,10 +191,10 @@ def main():
         game = Engine(word, level.Errors)
         while game.more_tries and game.still_not_correct:
             data = (
-                   game.interface_wrong_guesses,
-                   game.interface_guesses,
+                   game.wrong_guesses,
+                   game.guesses,
                    game.tries_left,
-                   game.interface_blanks,
+                   game.blanks,
                )
             interface(*data)
             game.fill_blanks(interface.prompt)
