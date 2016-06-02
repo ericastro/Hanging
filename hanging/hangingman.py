@@ -1,13 +1,19 @@
+from collections import namedtuple
 import inspect
 import os
 import os.path
 import random
-from collections import namedtuple
 
 
 class Engine:
+    """Define game logic for the normal mode."""
 
     def __init__(self, word, tries):
+        """The game logic for the normal mode.
+
+        :param word: The word to guess.
+        :param tries: The number of tries available.
+        """
         self._word = [letter for letter in word]
         self._blanks = [None for _ in range(len(self._word))]
         self._guesses = []
@@ -58,7 +64,6 @@ class Engine:
     @property
     def interface_wrong_guesses(self):
         return ', '.join(self.wrong_guesses)
-
     
     def indexes(self, sequence, element):
         return tuple(index for index, item in enumerate(sequence) if item == element)
@@ -91,6 +96,14 @@ class Interface:
         print '\n'
         print blanks
 
+    @property
+    def level(self):
+        return self._level
+
+    @property
+    def word(self):
+        return self._word
+
     def choose_level(self, input_func):
         choice = int(input_func())
         Level = namedtuple('Level', 'Name Errors')
@@ -103,12 +116,13 @@ class Interface:
         return self._level
 
     def word_to_guess(self, level):
-        words = ''.join(('en_us_', self._level.Name, '.txt'))
+        language = ''.join(('en_us', '_'))
+        words = ''.join((language, self.level.Name, '.txt'))
         path = os.path.abspath(os.path.dirname(__file__))
         words_file = os.path.join(path, 'words', words)
         with open(words_file, 'r') as wf:
-            self._word = random.choice(wf.readlines()).strip('\n')
-            return self._word
+            self.word = random.choice(wf.readlines()).strip('\n')
+            return self.word
 
     def prompt(self):
         choice = inspect.stack()[1][3]
@@ -134,17 +148,18 @@ class Interface:
         """
 
     def congratulations(self):
+        print '\n'
         print 'Congratulations, you won!'
-        print 'The word is %s.' % self._word.upper()
+        print 'The word is %s.' % self.word.upper()
 
     def loose(self):
+        print '\n'
         print 'Hey, sorry, you lost.'
         print 'Better luck next time!'
 
     def play_again(self, input_func):
         choice = str(input_func())
         if not choice.startswith('y'): exit(0)
-
 
 
 def main():
