@@ -84,16 +84,33 @@ class Engine:
             for index in inds:
                 self.blanks[index] = letter
             self.guesses.append(letter)
-            return True
         self.wrong_guesses.append(letter)
         self._tries -= 1
-        return False
+
+
+class Sniper(Engine):
+    '''Define game logic for the sniper mode.'''
+
+    def __init__(self, *args, **kwargs):
+        super(Sniper, self).__init__(*args, **kwargs)
+
+    def fill_blanks(self, function):
+        index, letter = function().split()
+        index = int(index) - 1
+        if self.word_letters[index] == letter:
+            self.blanks[index] = letter
+            self.guesses.append(letter)
+            self._tries += 2
+        else:
+            self.wrong_guesses.append(letter)
+            self._tries -= 1
 
 
 class Interface:
     '''Define the interface for the text mode version of the game.'''
     
     def __init__(self):
+        self._mode = None
         self._level = None
         self._word = None
 
@@ -114,7 +131,13 @@ class Interface:
 
     def interface_blanks(self, blanks):
         interface_blanks = ['_' if elem == None else elem for elem in blanks]
-        return ' '.join(interface_blanks)
+        if self._mode == 1:
+            return ' '.join(interface_blanks)
+        elif self._mode == 2:
+            sniper_indexes = [str(index+1) for index in range(len(blanks))]
+            sniper_blanks = ' '.join(interface_blanks)
+            sniper_indexes = ' '.join(sniper_indexes)
+            return sniper_blanks + '\n' + sniper_indexes
 
     @property
     def level(self):
@@ -131,6 +154,10 @@ class Interface:
     @word.setter
     def word(self, random_word):
         self._word = random_word
+
+    def choose_mode(self, input_func):
+        self._mode = int(input_func())
+        return self._mode
 
     def choose_level(self, input_func):
         choice = int(input_func())
@@ -155,7 +182,8 @@ class Interface:
     def prompt(self):
         choice = inspect.stack()[1][3]
         prompts = {
-                'choose_level': 'Choose a level to play (1-Easy, 2-Medium, 3-Hard): ',
+                'choose_mode': '\nChoose a game mode to play (1-Normal, 2-Sniper): ',
+                'choose_level': '\nChoose a level to play (1-Easy, 2-Medium, 3-Hard): ',
                 'fill_blanks': 'Enter a letter: ',
                 'play_again': '\nDo you want to play again (yes or no)? ',
                 }
@@ -190,13 +218,20 @@ class Interface:
         if not choice.startswith('y'): exit(0)
 
 
+def pick_engine(_mode, *args):
+    if _mode == 1:
+        return Engine(*args)
+    elif _mode == 2:
+        return Sniper(*args)
+
 def main():
     interface = Interface()
     interface.greeting()
     while True:
+        mode = interface.choose_mode(interface.prompt)
         level = interface.choose_level(interface.prompt)
         word = interface.word_to_guess(level.Name)
-        game = Engine(word, level.Errors)
+        game = pick_engine(mode, word, level.Errors)
         while game.more_tries and game.still_not_correct:
             data = (
                    game.wrong_guesses,
