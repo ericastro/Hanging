@@ -86,7 +86,7 @@ class Engine:
             self.guesses.append(letter)
             return True
         self.wrong_guesses.append(letter)
-        self.tries_left -= 1
+        self._tries -= 1
         return False
 
 
@@ -98,13 +98,13 @@ class Interface:
         self._word = None
 
     def __call__(self, wrongs, guesses, tries, blanks):
-        print '\n'
-        print 80 * '#'
-        print 'Wrong guesses: %s' % self.interface_wrong_guesses(wrongs)
-        print 'Guesses: %s' % self.interface_guesses(guesses)
-        print 'Chances left: %d' % tries
-        print '\n'
-        print self.interface_blanks(blanks)
+        print('\n')
+        print(80 * '#')
+        print('Wrong guesses: {}'.format(self.interface_wrong_guesses(wrongs)))
+        print('Guesses: {}'.format(self.interface_guesses(guesses)))
+        print('Chances left: {}'.format(tries))
+        print('\n')
+        print(self.interface_blanks(blanks))
 
     def interface_guesses(self, guesses):
         return ', '.join(guesses)
@@ -120,9 +120,17 @@ class Interface:
     def level(self):
         return self._level
 
+    @level.setter
+    def level(self, level_choice):
+        self._level = level_choice
+
     @property
     def word(self):
         return self._word
+
+    @word.setter
+    def word(self, random_word):
+        self._word = random_word
 
     def choose_level(self, input_func):
         choice = int(input_func())
@@ -132,8 +140,8 @@ class Interface:
                 2: Level('medium', 10),
                 3: Level('hard', 12)
                 }
-        self._level = level[choice]
-        return self._level
+        self.level = level[choice]
+        return self.level
 
     def word_to_guess(self, level):
         language = ''.join(('en_us', '_'))
@@ -151,10 +159,10 @@ class Interface:
                 'fill_blanks': 'Enter a letter: ',
                 'play_again': '\nDo you want to play again (yes or no)? ',
                 }
-        return raw_input(prompts[choice])
+        return input(prompts[choice])
 
     def greeting(self):
-        print """
+        print("""
         ************************
         *      HANGINGMAN      *
         ************************
@@ -165,17 +173,17 @@ class Interface:
         because the creator of this game haven't made the drawings yet. But you
         get the idea. Use a little imagination, alright?
     
-        """
+        """)
 
     def congratulations(self):
-        print '\n'
-        print 'Congratulations, you won!'
-        print 'The word is %s.' % self.word.upper()
+        print('\n')
+        print('Congratulations, you won!')
+        print('The word is {}.'.format(self.word.upper()))
 
     def loose(self):
-        print '\n'
-        print 'Hey, sorry, you lost.'
-        print 'Better luck next time!'
+        print('\n')
+        print('Hey, sorry, you lost.')
+        print('Better luck next time!')
 
     def play_again(self, input_func):
         choice = str(input_func())
