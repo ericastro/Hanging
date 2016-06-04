@@ -24,6 +24,7 @@ import inspect
 import os
 import os.path
 import random
+import numbers
 
 
 class Interface:
@@ -42,6 +43,9 @@ class Interface:
         print('Chances left: {}'.format(tries))
         print('\n')
         print(self.interface_blanks(blanks))
+        print('\n')
+        if self._mode == 2:
+            print('Sniper mode. Enter an index and a letter, separated by a space (e.g. 3 a).')
 
     def interface_guesses(self, guesses):
         return ', '.join(guesses)
@@ -76,19 +80,38 @@ class Interface:
         self._word = random_word
 
     def choose_mode(self, input_func):
-        self._mode = int(input_func())
-        return self._mode
+        while True:
+            mode = False
+            while not mode:
+                try:
+                    mode = int(input_func())
+                except ValueError:
+                    print('Give me a number. 1 or 2.')
+            if mode not in range(1,3):
+                print('There are only two options. 1 or 2.')
+            else:
+                self._mode = mode
+                return self._mode
 
     def choose_level(self, input_func):
-        choice = int(input_func())
-        Level = namedtuple('Level', 'Name Errors')
-        level = {
-                1: Level('easy', 7),
-                2: Level('medium', 10),
-                3: Level('hard', 12)
-                }
-        self.level = level[choice]
-        return self.level
+        while True:
+            choice = False
+            while not choice:
+                try:
+                    choice = int(input_func())
+                except ValueError:
+                    print('Give me a number. 1, 2 or 3.')
+            if choice not in range(1, 4):
+                print('There are only three options. 1, 2 or 3.')
+            else:
+                Level = namedtuple('Level', 'Name Errors')
+                level = {
+                        1: Level('easy', 7),
+                        2: Level('medium', 10),
+                        3: Level('hard', 12)
+                        }
+                self.level = level[choice]
+                return self.level
 
     def word_to_guess(self, level):
         language = ''.join(('en_us', '_'))
@@ -104,7 +127,7 @@ class Interface:
         prompts = {
                 'choose_mode': '\nChoose a game mode to play (1-Normal, 2-Sniper): ',
                 'choose_level': '\nChoose a level to play (1-Easy, 2-Medium, 3-Hard): ',
-                'fill_blanks': 'Enter a letter: ',
+                'fill_blanks': 'Your guess: ',
                 'play_again': '\nDo you want to play again (yes or no)? ',
                 }
         return input(prompts[choice])

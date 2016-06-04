@@ -88,6 +88,7 @@ class Sniper(Normal):
 
     def __init__(self, *args):
         super(Sniper, self).__init__(*args)
+        self._tries = self._tries * 2
 
     def fill_blanks(self, function):
         index, letter = function().split()
