@@ -18,6 +18,8 @@
 #
 #########################################################################
 
+import string
+
 
 class Normal:
     """Define game logic for the normal mode."""
@@ -73,7 +75,13 @@ class Normal:
         return tuple(index for index, item in enumerate(sequence) if item == element)
      
     def fill_blanks(self, function):
-        letter = function()
+        letter = ''
+        while True:
+            letter = function()
+            if letter not in string.ascii_letters or len(letter) > 1:
+                print('It\'s only words. One letter please.')
+            else:
+                break
         inds = self.indexes(self.word, letter)
         if inds:
             for index in inds:
@@ -91,7 +99,8 @@ class Sniper(Normal):
         self._tries = self._tries * 2
 
     def fill_blanks(self, function):
-        index, letter = function().split()
+        entry = function()
+        index, letter = entry[:-1], entry[-1]
         index = int(index) - 1
         if self.word_letters[index] == letter:
             self.blanks[index] = letter
